@@ -1,20 +1,37 @@
 import pygame
+import wave
 from pygame.locals import *
 import os
+import sounddevice
+import vlc
 
-# Set working directory
-os.chdir('C:/Users/amyhe/OneDrive/Documents/GitHub/pygame-stuff/')
+# Define files to play
+song_dir = 'sounds/Earth, Wind & Fire - September (Official HD Video).wav'
+ding_dir = 'sounds/FourChannelTest.wav'
 
-pygame.init()             # Initialise pygame  
+# Use wave to findout the framerate of the song
+song_wav = wave.open(song_dir)
+frequency = song_wav.getframerate()
+
+# ding_wav = wave.open(ding_dir)
+
+pygame.mixer.pre_init(frequency=frequency,
+                      size=-16,
+                      buffer=128,
+                      channels=6,
+                     )
+
 pygame.mixer.init()       # Initialise mixer
+pygame.init()             # Initialise pygame
 pygame.display.set_mode() # Initialise display window   
 
-# Load sounds
-song1 = pygame.mixer.Sound('sounds/song.wav')
-song2 = pygame.mixer.Sound('sounds/song2.wav')
-ding = pygame.mixer.Sound('sounds/ding.wav')
+print(pygame.mixer.get_num_channels())
 
-pygame.mixer.Channel(0).play(song1) # Play song on code run
+# Load sounds
+song = pygame.mixer.Sound(song_dir)
+ding = pygame.mixer.Sound(ding_dir)
+
+# pygame.mixer.Channel(0).play(song) # Play song on code run
 
 while True: # Infinite loop
     for event in pygame.event.get():  # For any event (i.e. key press)
