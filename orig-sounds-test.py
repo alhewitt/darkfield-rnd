@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 import os
+import vlc
 
 # Set working directory
 os.chdir('C:/Users/amyhe/OneDrive/Documents/GitHub/pygame-stuff/')
