@@ -1,8 +1,6 @@
 import pygame
 import glob
-import os
 import vlc
-import time
 
 def get_sound_name_from_address(address):
     """
@@ -31,7 +29,6 @@ def play_sound(sound):
 
 def stop_sound(player):
     player.release()
-    
 
 def mins_to_ticks(time):
     m, s = time.split(':')
@@ -78,15 +75,15 @@ pygame.time.set_timer(next_event, mins_to_ticks('0:13'), loops=1)
 
 def turn_on_button():
     print('Button on')
-    screen.fill(RED)
-    pygame.display.flip()
-    pygame.display.update()  
+#    screen.fill(RED)
+#    pygame.display.flip()
+#    pygame.display.update()  
 
 def turn_off_button():
     print('Button off')
-    screen.fill(BLACK)
-    pygame.display.flip()
-    pygame.display.update() 
+#    screen.fill(BLACK)
+#    pygame.display.flip()
+#    pygame.display.update() 
 
 def wait_until(time):
     time = mins_to_ticks(time)
@@ -156,25 +153,30 @@ def perform_event(event_number, Q):
     # Q4 response at '2:18'
     elif event_number == 8:
         turn_off_button()
-        if Q[4]: players.append(play_sound(sound_files['AUDIO_9']))
-        else: players.append(play_sound(sound_files['AUDIO_10']))
         stop_sound(player0)
+        if Q[4]: player4 = play_sound(sound_files['AUDIO_9'])
+        else: player4 = play_sound(sound_files['AUDIO_10'])
         pygame.time.set_timer(next_event, wait_until('2:52.5'), loops=1)
 
     # Q5 at '2:52.5'
     elif event_number == 9:
-        Q[5] = get_button_response_in_window(window='0:01', button_off=False)
-        pygame.time.set_timer(next_event, mins_to_ticks('0:01'), loops=1)
+        if not Q[4]:
+            Q[5] = get_button_response_in_window(window='0:01', button_off=False)
+            pygame.time.set_timer(next_event, mins_to_ticks('0:01'), loops=1)
     
     # Q5 response at '2:53.5'
     elif event_number == 10:
         turn_off_button()
         if not Q[4]:
-            if Q[5]: players.append(play_sound(sound_files['AUDIO_11']))
-            else: players.append(play_sound(sound_files['AUDIO_12']))
+            stop_sound(player4)
+            if Q[5]: player5 = append(play_sound(sound_files['AUDIO_11']))
+            else: player5 = append(play_sound(sound_files['AUDIO_12']))
         pygame.time.set_timer(next_event, wait_until('3:28.5'), loops=1)
 
     elif event_number == 11:
+        if Q[4]: stop_sound(player4)
+        else: stop_sound(player5)
+        
         if not Q[2]: players.append(play_sound(sound_files['AUDIO_15']))
         elif Q[1] and Q[2]: players.append(play_sound(sound_files['AUDIO_13']))
         else: players.append(play_sound(sound_files['AUDIO_14']))
