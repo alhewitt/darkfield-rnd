@@ -143,10 +143,6 @@ def get_button_response_in_window(window=BUTTON_WAIT, Q=False, button_off=True):
         if get_press():
             Q = True
             pressed = 1
-#         for event in pygame.event.get():
-#             if event.type == pygame.KEYDOWN:
-#                 if event.key == pygame.K_SPACE:
-#                     Q = True
     return Q
 
 #=======================================================================================#
