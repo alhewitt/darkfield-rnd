@@ -1,7 +1,8 @@
 import pygame
 import glob
 import vlc
-import wiringpi    
+import wiringpi
+import time
     
 '''
 Issues:
@@ -12,7 +13,10 @@ Issues:
 Ideas:
 
 - Try allowing two long sounds at once again
+- Find limits for simultanious sounds
+- Check how long it takes to load a sound in (might be worth pre-loading)
 - Use something other than pygame for timing (might be more accurate)
+- Have a user object with attributes such as gender, punches, certain question responses etc
 '''
 
 def get_sound_name_from_address(address):
@@ -72,7 +76,8 @@ button_on_event = pygame.USEREVENT
 button_off_event = pygame.USEREVENT + 1
 sound_event = pygame.USEREVENT + 2
 next_event = pygame.USEREVENT + 3
-end_fight = pygame.USEREVENT + 4
+fight_start_event = pygame.USEREVENT + 4
+fight_end_event = pygame.USEREVENT + 5
 
 # Load sounds
 sound_files = get_sound_files_from_folder(folder = '4 Channel Bounces/')
@@ -91,7 +96,7 @@ long_players = players[1]
 Q = [0, False, False, False, False, False]
 
 def play_sound(sound):
-    while len(short_players) > SHORT_SOUNDS_LOADED:
+    while len(short_players) >= 1:
         stop_sound(short_players[0])
         short_players.pop(0)
     print("Loading", sound)
@@ -145,107 +150,82 @@ def get_button_response_in_window(window=BUTTON_WAIT, Q=False, button_off=True):
             pressed = 1
     return Q
 
+def play_punch_sound(punches):
+    for player in short_players:
+        print('stopping', player)
+        stop_sound(player)
+    seventh = False
+    if punches == 1:
+        short_players.append(play_sound(sound_files['AUDIO_23_PUNCH_2']))
+    elif punches == 2:
+        short_players.append(play_sound(sound_files['AUDIO_23_PUNCH_2']))
+    elif punches == 3:
+        short_players.append(play_sound(sound_files['AUDIO_23_PUNCH_2']))
+    elif punches == 4:
+        short_players.append(play_sound(sound_files['AUDIO_23_PUNCH_2']))
+    elif punches == 5:
+        short_players.append(play_sound(sound_files['AUDIO_23_PUNCH_2']))
+    elif punches == 6:
+        short_players.append(play_sound(sound_files['AUDIO_23_PUNCH_2']))
+    elif punches == 7:
+        pygame.time.set_timer(fight_end_event, 0)
+        short_players.append(play_sound(sound_files['AUDIO_23_PUNCH_2']))
+        end_fight()
+        seventh = True
+    return seventh        
+        
+
+def get_punches_until(end):
+    punches = 0
+    ended = False
+    while (pygame.time.get_ticks() - start_time) < end and ended == False:
+        if get_press():
+            turn_off_button()
+            punches += 1
+            ended = play_punch_sound(punches)
+            print(punches, ended)
+            time.sleep(2)
+            turn_on_button()
+            
+            
+    
+def begin_fight():
+    turn_on_button()
+    fight_start_time = pygame.time.get_ticks()
+    pygame.time.set_timer(fight_end_event, mins_to_ticks('1:00'), loops=1)
+    punches = 0
+    print('Fight started')
+    get_punches_until(wait_until('1:02'))
+    
+def end_fight():
+    turn_off_button()
+    
+    
 #=======================================================================================#
 # This function contains all events
 def perform_event(event_number, Q):
-    # Q1 = Q[1] etc
-    
-    # Q1 at '0:13'
-    if event_number == 1:
-        pygame.time.set_timer(next_event, mins_to_ticks(BUTTON_WAIT), loops=1)
-        Q[1] = get_button_response_in_window(button_off=False)
-
-    # Q1 response at '0:14.5'
-    elif event_number == 2:
-        pygame.time.set_timer(next_event, mins_to_ticks('0:01.5'), loops=1)
-        turn_off_button()
-        if Q[1]: short_players.append(play_sound(sound_files['AUDIO_2']))
-        else: short_players.append(play_sound(sound_files['AUDIO_3']))
-
-    # Q2 at '0:16'
-    elif event_number == 3:
-        Q[2] = get_button_response_in_window()
-        pygame.time.set_timer(next_event, wait_until('0:43'), loops=1)
-
-    # Q3 at '0:43'
-    elif event_number == 4:
-        Q[3] = get_button_response_in_window(button_off=False)
-        pygame.time.set_timer(next_event, mins_to_ticks(BUTTON_WAIT), loops=1)
-
-    # Q3 response at '0:44.5'
-    elif event_number == 5:
-        turn_off_button()
-        if Q[3]: short_players.append(play_sound(sound_files['AUDIO_4']))
-        else: short_players.append(play_sound(sound_files['AUDIO_5']))
-        pygame.time.set_timer(next_event, wait_until('1:33'), loops=1)
-
-    # Kick out legs at '1:33'
-    elif event_number == 6:
-        if not Q[2]: short_players.append(play_sound(sound_files['AUDIO_8']))
-        elif Q[1] and Q[2]: short_players.append(play_sound(sound_files['AUDIO_6']))
-        else: players.append(play_sound(sound_files['AUDIO_7']))
-        pygame.time.set_timer(next_event, wait_until('2:16.5'), loops=1)
-
-    # Q4 at '2:16.5'
-    elif event_number == 7:
-        Q[4] = get_button_response_in_window(button_off=False)
-        pygame.time.set_timer(next_event, mins_to_ticks(BUTTON_WAIT), loops=1)
-
-    # Q4 response at '2:18'
-    elif event_number == 8:
-        turn_off_button()
-        stop_sound(long_players[0]) # stop AUDIO_1
-        long_players.pop(0) # Remove stopped audio from list
-        if Q[4]:
-            long_players.append(play_sound(sound_files['AUDIO_9']))
-            event_number = 10 # In order to skip events 9 and 10
-            pygame.time.set_timer(next_event, wait_until('3:28.5'), loops=1)
-        else:
-            long_players.append(play_sound(sound_files['AUDIO_10']))
-            pygame.time.set_timer(next_event, wait_until('2:52.5'), loops=1)
-
-    # Q5 at '2:52.5'
-    elif event_number == 9:
-        if not Q[4]:
-            Q[5] = get_button_response_in_window(window='0:01', button_off=False)
-            pygame.time.set_timer(next_event, mins_to_ticks('0:01'), loops=1)
-    
-    # Q5 response at '2:53.5'
-    elif event_number == 10:
-        turn_off_button()
-        if not Q[4]:
-            stop_sound(long_players[0]) # Stop AUDIO_10
-            long_players.pop(0) # Remove stopped audio from list
-            if Q[5]: long_players.append(play_sound(sound_files['AUDIO_11']))
-            else: long_players.append(play_sound(sound_files['AUDIO_12']))
-        pygame.time.set_timer(next_event, wait_until('3:28.5'), loops=1)
-        
-    # Death scene at '3:28.5'
-    elif event_number == 11:
-        stop_sound(long_players[0])
-        long_players.pop(0)
-        if not Q[2]: long_players.append(play_sound(sound_files['AUDIO_15']))
-        elif Q[1] and Q[2]: long_players.append(play_sound(sound_files['AUDIO_13']))
-        else: long_players.append(play_sound(sound_files['AUDIO_14']))
-        
     # Fight at '3:42
-    elif event_number == 12:
-        stop_sound(long_players[0])
-        long_players.pop(0)
-        long_players.append(play_sound(sound_files['AUDIO_16_fight_base']))
+    if event_number == 12:
+#         stop_sound(long_players[0])
+#         long_players.pop(0)
+        long_players.append(play_sound(sound_files['AUDIO_16_FIGHT_BASE']))
+        time.sleep(2)
+        begin_fight()
+        turn_off_button()
+        
 
     return Q, event_number
         
 #=======================================================================================#
 
 # First event: Play audio 1
-long_players.append(play_sound(sound_files['AUDIO_1']))
-event_number = 1
-pygame.time.set_timer(next_event, mins_to_ticks('0:13'), loops=1)
+# long_players.append(play_sound(sound_files['AUDIO_1']))
+# event_number = 1
+# pygame.time.set_timer(next_event, mins_to_ticks('0:13'), loops=1)
 
 # Uncomment this to skip straight to a certain point
-# event_number = 12
-# pygame.time.set_timer(next_event, mins_to_ticks('0:1'), loops=1)
+event_number = 12
+pygame.time.set_timer(next_event, mins_to_ticks('0:1'), loops=1)
 
 while True:
     for event in pygame.event.get():  # For any event (i.e. key press)
@@ -257,3 +237,7 @@ while True:
             event_number += 1
         if event.type == button_off_event:
             turn_off_button()
+        if event.type == fight_start_event:
+            begin_fight()
+        if event.type == fight_end_event:
+            end_fight()
